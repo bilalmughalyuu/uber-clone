@@ -1,8 +1,8 @@
 import SwiftUI
 
 struct LocationSearchResultCell: View {
-    var title: String = "Starbucks Coffee"
-    var subtitle: String = "123 Main Street, Dubai"
+    var title: String
+    var subtitle: String
 
     var body: some View {
         HStack(alignment: .top, spacing: 16) {
@@ -34,5 +34,5 @@ struct LocationSearchResultCell: View {
 }
 
 #Preview {
-    LocationSearchResultCell()
+    LocationSearchResultCell(title: "Starbucks Coffee", subtitle: "123 Main Street, Dubai")
 }
