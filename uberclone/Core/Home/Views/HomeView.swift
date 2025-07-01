@@ -6,9 +6,12 @@ struct HomeView: View {
         ZStack(alignment: .top) {
             UberMapViewRepresentable()
                 .ignoresSafeArea()
+                
             
             if showLocationSearchView {
-                LocationSearchView()
+                LocationSearchView(
+                    showLocationSearchView: $showLocationSearchView
+                )
             } else {
                 LocationSearchActivationView()
                     .padding(.top, 60)
@@ -22,6 +25,7 @@ struct HomeView: View {
             
             MapViewActionButton(showLocationSearchView: $showLocationSearchView)
         }
+        
     }
 }
 
