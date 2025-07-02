@@ -5,6 +5,7 @@ struct UberMapViewRepresentable: UIViewRepresentable {
     
     let mapView = MKMapView()
     let location = LocationManager()
+    @Binding var mapState: MapViewState
     @EnvironmentObject var locationviewModel: LocationSearchViewModel
     
     func makeUIView(context: Context) -> some UIView {
@@ -17,10 +18,20 @@ struct UberMapViewRepresentable: UIViewRepresentable {
     }
     
     func updateUIView(_ view: UIViewType, context: Context) {
-        if let coordinates = locationviewModel.selectedLocationCoordinates {
-            print(coordinates)
-            context.coordinator.addAndSelectAnnotation(withCoordinates: coordinates)
-            context.coordinator.configurePolyline(withDestinationCoordinate: coordinates)
+        
+        switch mapState {
+        case .noInput:
+            context.coordinator.clearMapViewAndRecenterOnUserLocation()
+            break;
+        case .searchingForLocation:
+            break;
+        case .locationSelected:
+            if let coordinates = locationviewModel.selectedLocationCoordinates {
+                print(coordinates)
+                context.coordinator.addAndSelectAnnotation(withCoordinates: coordinates)
+                context.coordinator.configurePolyline(withDestinationCoordinate: coordinates)
+            }
+            break;
         }
     }
     
@@ -33,6 +44,7 @@ extension UberMapViewRepresentable {
     class MapCoordinator: NSObject, MKMapViewDelegate {
         let parent: UberMapViewRepresentable
         var userLocationCoordinate: CLLocationCoordinate2D?
+        var currentRegion: MKCoordinateRegion?
         
         init(parent: UberMapViewRepresentable) {
             self.parent = parent
@@ -51,7 +63,7 @@ extension UberMapViewRepresentable {
                     longitudeDelta: 0.05
                 )
             )
-            
+            self.currentRegion = region
             parent.mapView.setRegion(region, animated: true)
         }
         
@@ -100,5 +112,14 @@ extension UberMapViewRepresentable {
                     completion(route)
                 }
             }
+        
+        func clearMapViewAndRecenterOnUserLocation() {
+            parent.mapView.removeAnnotations(parent.mapView.annotations)
+            parent.mapView.removeOverlays(parent.mapView.overlays)
+            
+            if let currentRegion = currentRegion {
+                parent.mapView.setRegion(currentRegion, animated: true)
+            }
+        }
     }
 }
