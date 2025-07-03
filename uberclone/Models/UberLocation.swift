@@ -1,8 +1,7 @@
-//
-//  UberLocation.swift
-//  uberclone
-//
-//  Created by Muhammad Bilal on 03/07/2025.
-//
-
 import Foundation
+import CoreLocation
+
+struct UberLocation {
+    let title: String
+    let coordinate: CLLocationCoordinate2D
+}

@@ -8,8 +8,9 @@ class LocationSearchViewModel: NSObject, ObservableObject {
             searchCompleter.queryFragment = destinationLocationText
         }
     }
-    @Published var selectedLocationCoordinates: CLLocationCoordinate2D?
-    
+    @Published var selectedUberLocation: UberLocation?
+    @Published var pickupTime: String?
+    @Published var dropTime: String?
     @Published var results = [MKLocalSearchCompletion]()
     private var searchCompleter = MKLocalSearchCompleter()
     
@@ -35,7 +36,7 @@ class LocationSearchViewModel: NSObject, ObservableObject {
             guard let item = response?.mapItems.first else { return }
             
             let coordinates = item.placemark.coordinate
-            self.selectedLocationCoordinates = coordinates
+            self.selectedUberLocation = UberLocation(title: localSearch.title, coordinate: coordinates)
         }
     }
     
@@ -49,7 +50,7 @@ class LocationSearchViewModel: NSObject, ObservableObject {
     }
     
     func computeRidePrice(forType type: RideType) -> Double {
-        guard let destCoordinate = selectedLocationCoordinates else { return 0.0 }
+        guard let destCoordinate = selectedUberLocation?.coordinate else { return 0.0 }
         guard let userCoordinate = self.userLocation else { return 0.0 }
         
         let userLocation = CLLocation(latitude: userCoordinate.latitude, longitude: userCoordinate.longitude)
@@ -57,6 +58,36 @@ class LocationSearchViewModel: NSObject, ObservableObject {
         
         let tripDistance = userLocation.distance(from: destinationLocation)
         return type.computePrice(for: tripDistance)
+    }
+    
+    func getDestinationRoute(
+        from userLocation: CLLocationCoordinate2D,
+        to destinationLocation: CLLocationCoordinate2D,
+        completion: @escaping(MKRoute) -> Void) {
+            let userPlacemark = MKPlacemark(coordinate: userLocation)
+            let destionationPlacemark = MKPlacemark(coordinate: destinationLocation)
+            let request = MKDirections.Request()
+            request.source = MKMapItem(placemark: userPlacemark)
+            request.destination = MKMapItem(placemark: destionationPlacemark)
+            let directions = MKDirections(request: request)
+            
+            directions.calculate { response, error in
+                if let error = error {
+                    print("Failed to get direction \(error)")
+                    return
+                }
+                guard let route = response?.routes.first else { return }
+                self.configurePickupAndDropOffTime(with: route.expectedTravelTime)
+                completion(route)
+            }
+        }
+    
+    func configurePickupAndDropOffTime(with expectedTravelTime: Double) {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "hh:mm a"
+        
+        pickupTime = formatter.string(from: Date())
+        dropTime = formatter.string(from: Date() + expectedTravelTime)
     }
 }
 
