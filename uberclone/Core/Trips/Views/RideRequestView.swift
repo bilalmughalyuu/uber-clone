@@ -83,7 +83,11 @@ struct RideRequestView: View {
                                         : .black
                                     )
                                 
-                                Text("$\(locationViewModel.computeRidePrice(forType: ride))")
+                                Text(
+                                    locationViewModel
+                                        .computeRidePrice(forType: ride)
+                                        .toCurrency()
+                                )
                                     .font(.system(size: 14))
                                     .foregroundColor(
                                         ride == selectedRideType
